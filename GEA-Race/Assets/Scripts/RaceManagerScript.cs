@@ -10,7 +10,9 @@ public class RaceManagerScript : MonoBehaviour
     public GameObject[] CPMarkerSprites;
     private GameObject[] all_rings;
     private GameObject[] active_rings;
+    private PlayerTestMovementScript player_obj;
     private Camera cam_ref;
+    public Animator cam_anim;
     public int max_laps;
     public int current_lap = 0;
     void Start()
@@ -18,6 +20,7 @@ public class RaceManagerScript : MonoBehaviour
         // STORE ALL RINGS AND ENABLE STARTING LINE
         all_rings = GameObject.FindGameObjectsWithTag("Ring");
         cam_ref = Camera.main;
+        player_obj = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerTestMovementScript>();
         foreach (GameObject ring in all_rings)
         {
             if (ring.GetComponent<RingScript>().ring_type == RingScript.RingTypes.START || ring.GetComponent<RingScript>().ring_type == RingScript.RingTypes.START_AND_FINISH)
@@ -76,26 +79,29 @@ public class RaceManagerScript : MonoBehaviour
             ring.GetComponent<RingScript>().cur_enabled = false;
         }
         active_rings = null;
-        foreach (GameObject ring in n_rings)
+        if (n_rings != null)
         {
-            ring.GetComponent<RingScript>().cur_enabled = true;
-            if (active_rings != null)
+            foreach (GameObject ring in n_rings)
             {
-                // IF THERE ARE CURRENT ACTIVE RINGS
-                // ADD THEM ONTO THE ARRAY
-                GameObject[] temp_rings = new GameObject[active_rings.Length + 1];
-                active_rings.CopyTo(temp_rings, 0);
-                temp_rings[active_rings.Length] = ring;
-                active_rings = temp_rings;
-            }
-            else
-            {
-                // SHOULD NOT BE POSSIBLE, BUT JUST IN CASE
-                // IF THERE ARE NOT ACTIVE RINGS
-                // CREATE SINGLE SIZE ARRAY OF NEW RING
-                GameObject[] temp_rings = new GameObject[1];
-                temp_rings[0] = ring;
-                active_rings = temp_rings;
+                ring.GetComponent<RingScript>().cur_enabled = true;
+                if (active_rings != null)
+                {
+                    // IF THERE ARE CURRENT ACTIVE RINGS
+                    // ADD THEM ONTO THE ARRAY
+                    GameObject[] temp_rings = new GameObject[active_rings.Length + 1];
+                    active_rings.CopyTo(temp_rings, 0);
+                    temp_rings[active_rings.Length] = ring;
+                    active_rings = temp_rings;
+                }
+                else
+                {
+                    // SHOULD NOT BE POSSIBLE, BUT JUST IN CASE
+                    // IF THERE ARE NOT ACTIVE RINGS
+                    // CREATE SINGLE SIZE ARRAY OF NEW RING
+                    GameObject[] temp_rings = new GameObject[1];
+                    temp_rings[0] = ring;
+                    active_rings = temp_rings;
+                }
             }
         }
     }
@@ -106,7 +112,8 @@ public class RaceManagerScript : MonoBehaviour
         if (current_lap >= max_laps)
         {
             // FINISH RACE
-            Debug.Log("FINISH");
+            Finish();
+            UpdateRings(null);
         }
         else
         {
@@ -114,5 +121,14 @@ public class RaceManagerScript : MonoBehaviour
             UpdateRings(n_rings);
             current_lap++;
         }
+    }
+
+    void Finish()
+    {
+        // Stop all movement inputs
+        player_obj.finished_race = true;
+        // Start finish animation
+        cam_anim.SetBool("Finished", true);
+        // Show leaderboard of race
     }
 }

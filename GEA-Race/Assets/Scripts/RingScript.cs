@@ -8,6 +8,8 @@ public class RingScript : MonoBehaviour
     public GameObject[] next_rings;
     public enum RingTypes { START,CP,FINISH, START_AND_FINISH };
     public RingTypes ring_type;
+    public enum MoveType { GROUNDED, AIRBOURNE};
+    public MoveType move_type;
     public bool cur_enabled;
 
     void Start()
@@ -29,22 +31,35 @@ public class RingScript : MonoBehaviour
         if (cur_enabled)
         {
             this.GetComponent<MeshRenderer>().enabled = true;
-            this.GetComponent<CapsuleCollider>().enabled = true;
+            this.GetComponent<MeshCollider>().enabled = true;
         }
         else
         {
             this.GetComponent<MeshRenderer>().enabled = false;
-            this.GetComponent<CapsuleCollider>().enabled = false;
+            this.GetComponent<MeshCollider>().enabled = false;
         }
     }
 
     // WHEN RING IS HIT
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Hit");
         if (other.tag == "Player")
         {
-            Debug.Log("Player");
+            other.GetComponent<PlayerTestMovementScript>().last_cp_location = transform.position;
+            other.GetComponent<PlayerTestMovementScript>().last_cp_rotation = transform.eulerAngles.y - 90;
+            if (move_type == MoveType.GROUNDED)
+            {
+                other.GetComponent<PlayerTestMovementScript>().cur_move_type = PlayerTestMovementScript.MoveType.GROUNDED;
+            }
+            else if (move_type == MoveType.AIRBOURNE)
+            {
+                other.GetComponent<PlayerTestMovementScript>().cur_move_type = PlayerTestMovementScript.MoveType.AIRBOURNE;
+            }
+            else
+            {
+
+                //MOVE TYPE ERROR
+            }
             RaceManagerScript manager = GameObject.FindGameObjectWithTag("Manager").GetComponent<RaceManagerScript>();
             if (ring_type == RingTypes.FINISH || ring_type == RingTypes.START_AND_FINISH || ring_type == RingTypes.START)
             {
